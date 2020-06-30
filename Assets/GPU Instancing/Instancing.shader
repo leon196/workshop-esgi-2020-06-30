@@ -3,6 +3,9 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+
+        _Color ("Color", Color) = (1,1,1,1)
+        _Thin ("Thin", Float) = 0.1
     }
     SubShader {
         Tags { "RenderType"="Opaque" }
@@ -15,6 +18,8 @@
         #pragma instancing_options procedural:setup
 
         sampler2D _MainTex;
+        float4 _Color;
+        float _Thin;
 
         struct Input {
             float2 uv_MainTex;
@@ -37,7 +42,7 @@
             float4 data = positionBuffer[unity_InstanceID];
 
             float rotation = data.w * data.w * _Time.y * 0.5f;
-            rotate2D(data.xz, rotation);
+            //rotate2D(data.xz, rotation);
 
             unity_ObjectToWorld._11_21_31_41 = float4(data.w, 0, 0, 0);
             unity_ObjectToWorld._12_22_32_42 = float4(0, data.w, 0, 0);
@@ -55,7 +60,8 @@
 
         void surf (Input IN, inout SurfaceOutputStandard o) {
             fixed4 c = tex2D (_MainTex, IN.uv_MainTex);
-            o.Albedo = c.rgb;
+            o.Emission = _Color * _Thin / (IN.uv_MainTex.x * (1.0-IN.uv_MainTex.x));
+            o.Emission += _Color * _Thin / (IN.uv_MainTex.y * (1.0-IN.uv_MainTex.y));
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
             o.Alpha = c.a;
